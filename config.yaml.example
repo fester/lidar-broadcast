@@ -1,2 +1,4 @@
+host:
 port: 5566
+tty: "/dev/tty.usbserial-DM00KEA0"
   
