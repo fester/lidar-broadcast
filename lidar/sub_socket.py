@@ -25,7 +25,7 @@ class SubSocket:
         return data
 
     def next(self):
-        self.__next__()
+        return self.__next__()
     
     def __next__(self):
         payload = self.__receive()
