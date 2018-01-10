@@ -1,5 +1,4 @@
 import zmq
-import pickle
 
 class SubSocket:
     def __init__(self, config):
@@ -18,15 +17,12 @@ class SubSocket:
         self.__socket = s
         self.__context = ctx
 
-    def __from_wire(self, payload):
-        return pickle.loads(payload)
-        
     def __iter__(self):
         return self
 
     def __receive(self):
-        data = self.__socket.recv()
-        return self.__from_wire(data)
+        data = self.__socket.recv_json()
+        return data
 
     def next(self):
         self.__next__()

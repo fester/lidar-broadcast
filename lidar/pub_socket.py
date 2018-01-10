@@ -1,5 +1,4 @@
 import zmq
-import pickle
 
 class PubSocket:
     def __init__(self, config):
@@ -18,12 +17,9 @@ class PubSocket:
         self.__context = ctx
         self.__socket = s
 
-    def __to_wire(self, data):
-        return pickle.dumps(data)
-        
     def __publish(self, payload):
-        data = self.__to_wire(payload)
-        self.__socket.send(data)
+        # data = self.__to_wire(payload)
+        self.__socket.send_json(payload)
         
     def broadcast(self, data_source):
         for chunk in data_source:
