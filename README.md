@@ -36,7 +36,7 @@ python sub.py
 
 The server broadcasts Sweep scans through a 0MQ pub socket. Messages are in JSON, with the following schema:
 
-```json
+```javascript
 {
    "type":"object",
    "properties":{
