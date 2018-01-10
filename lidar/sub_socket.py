@@ -11,9 +11,8 @@ class SubSocket:
         s = ctx.socket(zmq.SUB)
 
         host = self.__config.get('host', '127.0.0.1')
-        host = self.__config.get('host', '127.0.0.1')
         port = self.__config.get('port', 5566)
-        connect_addr = f"tcp://{host}:{port}"
+        connect_addr = "tcp://{host}:{port}".format(host=host, port=port)
         s.connect(connect_addr)
         s.setsockopt(zmq.SUBSCRIBE, b'')
         self.__socket = s

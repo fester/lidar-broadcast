@@ -12,7 +12,7 @@ class PubSocket:
         host = self.__config.get('host', '*')
         port = self.__config.get('port', 5566)
         
-        bind_addr = f"tcp://{host}:{port}"
+        bind_addr = "tcp://{host}:{port}".format(host=host, port=port)
         s.bind(bind_addr)
 
         self.__context = ctx
