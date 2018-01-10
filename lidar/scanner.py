@@ -1,5 +1,4 @@
-from sweeppy import Sweep
-
+import time
 
 class TranslateReadings:
     def __init__(self, sweeper):
@@ -18,4 +17,6 @@ class TranslateReadings:
 
     def __next__(self):
         scan = next(self.__sweep_generator)
-        return self.__scan_data(scan)
+        timestamp = time.time()
+        return {"time": timestamp,
+                "scan": self.__scan_data(scan)}
