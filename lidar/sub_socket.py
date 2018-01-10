@@ -27,6 +27,9 @@ class SubSocket:
     def __receive(self):
         data = self.__socket.recv()
         return self.__from_wire(data)
+
+    def next(self):
+        self.__next__()
     
     def __next__(self):
         payload = self.__receive()
