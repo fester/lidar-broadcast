@@ -39,32 +39,42 @@ def render_lidar(surface, features, pts):
     if pts is None or len(pts) == 0:
         return
 
-    arr = pygame.surfarray.pixels3d(surface)
-    w, h, _ = arr.shape
-    # if g_LastBlur == 0:
-    #     gaussian_filter(arr, sigma=0.8, output=arr)
-    #     g_LastBlur = 5
-
-    g_LastBlur -= 1
-
-    idx = np.stack([pts.real, pts.imag], axis=-1)
-    idx *= g_Zoom
-    idx += (w/2, h/2)
-    idx = np.rint(idx).astype(np.int)
-    idx = idx[(idx[:, 0] >= 0) & (idx[:, 0] < w) & (idx[:, 1] >= 0) & (idx[:, 1] < h)]
-
-    for x, y in idx:
-        arr[x, y] = (255, 255 ,255)
-
-
-    gaussian_filter(arr, sigma=1, output=arr)
+    kernel_width = 32
+    kernel = gkern(kernel_width, 3.5)
+    kernel_surface = pygame.surfarray.make_surface(kernel)
     
-    orb = cv2.ORB_create()
-    kp = orb.detect(arr,None)
-    kp, des = orb.compute(arr, kp)
-    img2 = cv2.drawKeypoints(arr, kp, outImage=None, color=(0, 255, 0), flags=0) #, color=(0,255,0), flags=0)
-    pygame.surfarray.blit_array(features, img2)
+    for p in pts:
+        x, y = p.real, p.imag
+        sx -= kernel_width/2
+        sy -= kernel_width/2
+        surface.blit(kernel_surface, (sx, sy), pygame.BLEND_ADD)
 
+
+    # arr = pygame.surfarray.pixels3d(surface)
+    # w, h, _ = arr.shape
+    # # if g_LastBlur == 0:
+    # #     gaussian_filter(arr, sigma=0.8, output=arr)
+    # #     g_LastBlur = 5
+
+    # g_LastBlur -= 1
+
+    # idx = np.stack([pts.real, pts.imag], axis=-1)
+    # idx *= g_Zoom
+    # idx += (w/2, h/2)
+    # idx = np.rint(idx).astype(np.int)
+    # idx = idx[(idx[:, 0] >= 0) & (idx[:, 0] < w) & (idx[:, 1] >= 0) & (idx[:, 1] < h)]
+
+    # for x, y in idx:
+    #     arr[x, y] = (255, 255 ,255)
+
+
+    # gaussian_filter(arr, sigma=1, output=arr)
+    
+    # orb = cv2.ORB_create()
+    # kp = orb.detect(arr,None)
+    # kp, des = orb.compute(arr, kp)
+    # img2 = cv2.drawKeypoints(arr, kp, outImage=None, color=(0, 255, 0), flags=0) #, color=(0,255,0), flags=0)
+    # pygame.surfarray.blit_array(features, img2)
 
     
 def process_keys(kb_state):
@@ -83,7 +93,18 @@ def process_keys(kb_state):
         changed = False
 
     return changed
-        
+
+
+def gkern(kernlen, nsig):
+    """Returns a 2D Gaussian kernel array."""
+
+    interval = (2*nsig+1.)/(kernlen)
+    x = np.linspace(-nsig-interval/2., nsig+interval/2., kernlen+1)
+    kern1d = np.diff(st.norm.cdf(x))
+    kernel_raw = np.sqrt(np.outer(kern1d, kern1d))
+    kernel = kernel_raw/kernel_raw.sum()
+    return kernel
+
 
 def main():
     with open("config.yaml", "rt") as f:
