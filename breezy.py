@@ -20,7 +20,7 @@ SCREEN_SIZE_PIXELS = 900
 class ScanseLidar(Laser):
     ENGINE_ROTATION_HZ = 6
     SAMPLING_RATE_HZ = 1000
-    SAMPLES_COUNT = int(1.3*SAMPLING_RATE_HZ/ENGINE_ROTATION_HZ)
+    SAMPLES_COUNT = int(1*SAMPLING_RATE_HZ/ENGINE_ROTATION_HZ)
     HOLE_WIDTH = 40
     
     def __init__(self):
@@ -28,6 +28,15 @@ class ScanseLidar(Laser):
         Laser.__init__(self, self.SAMPLES_COUNT, self.ENGINE_ROTATION_HZ, 360, self.HOLE_WIDTH, offset_mm=25)
 
 
+class A2Lidar(Laser):
+    ENGINE_ROTATION_HZ = 10
+    SAMPLING_RATE_HZ = 4000
+    SAMPLES_COUNT = int(SAMPLING_RATE_HZ/ENGINE_ROTATION_HZ)
+    HOLE_WIDTH = 20
+
+    def __init__(self):
+        Laser.__init__(self, self.SAMPLES_COUNT, self.SAMPLING_RATE_HZ, 360, self.HOLE_WIDTH, offset_mm=25)
+        
 def convert_point(angle, distance, strength):
     angle_r = angle*math.pi/180.0
     x = distance*math.cos(angle_r)
@@ -36,24 +45,27 @@ def convert_point(angle, distance, strength):
 
 
 def read_scans(data_source):
-    deg_per_scan = 360/ScanseLidar.SAMPLES_COUNT
+    deg_per_scan = 360/A2Lidar.SAMPLES_COUNT
 
     for scan in data_source:
         payload = scan['scan']
-        points = ((p['angle']%360, p['distance'], p['strength']) for p in payload)
+        points = (((360-p['angle'])%360, p['distance'], p['strength']) for p in payload)
         
         points = np.array(list(points))
 
         #threshold = np.percentile(points[:, 2], 30)
-        threshold = 0
-        points = points[points[:, 2] > threshold]
-        points[:, 1] *= 1000 # Scale distance from meters to mm
+        # threshold = 0
+        # points = points[points[:, 2] > threshold]
         
-        distance_bins = [0] * ScanseLidar.SAMPLES_COUNT
+        distance_bins = [0] * A2Lidar.SAMPLES_COUNT
         
         for p in points:
+
             bin_no = int(p[0]/deg_per_scan)
-            distance_bins[bin_no] = p[1] # Copy distance value at an angle to a resulting bin
+            try:
+                distance_bins[bin_no] = p[1] # Copy distance value at an angle to a resulting bin
+            except:
+                print(f"WTF {bin_no} - {p}")
 
         yield distance_bins
 
@@ -62,18 +74,17 @@ def render_map(screen, slam_map):
     screen.fill((0,0,0))
     
     map_ps = np.array(slam_map).reshape((MAP_SIZE_PIXELS, MAP_SIZE_PIXELS))
-
+    map_ps = np.rot90(map_ps, k=2)
+    
     render_plane = imresize(map_ps, (SCREEN_SIZE_PIXELS, SCREEN_SIZE_PIXELS))
 
     render_plane = np.dstack([render_plane, render_plane, render_plane])
+
     pygame.surfarray.blit_array(screen, render_plane)
     
 
 def render_bot_reference(surface, x, y, theta):
 
-    if x < 14000:
-        import pdb; pdb.set_trace()
-    
     scale = (MAP_SIZE_PIXELS/(MAP_SIZE_METERS*1000))
     arrow_length = 20 # arrow length in pixels
     
@@ -96,6 +107,7 @@ def do_the_slam_thing(slam, mapbytes, data_source):
     reads_count = 0
     x, y = 0, 0
 
+    while True:
     for scan in data_source:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
@@ -105,7 +117,6 @@ def do_the_slam_thing(slam, mapbytes, data_source):
         slam.getmap(mapbytes)
 
         render_map(screen, mapbytes)
-        print(x,y,theta)
         render_bot_reference(screen, x, y, theta)
         
         pygame.display.flip()
@@ -116,7 +127,7 @@ def do_the_slam_thing(slam, mapbytes, data_source):
             with open("map_updates/map_{}".format(reads_count), "wb") as f:
                 f.write(mapbytes)
             
-        
+
 def main():
     print("Initializing lidar server")
     pygame.init()
@@ -125,7 +136,7 @@ def main():
         cfg = yaml.load(f)
 
     socket = SubSocket(cfg)
-    lidar = ScanseLidar()
+    lidar = A2Lidar()
 
     print("Initializing SLAM")
 
