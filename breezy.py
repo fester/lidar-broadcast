@@ -5,7 +5,6 @@ import yaml
 import math
 import pygame
 import numpy as np
-from functools import partial
 from scipy.misc import imresize, imsave
 from scipy import optimize as opt
 import cv2
@@ -19,7 +18,6 @@ from lidar.navigator import OccupancyGrid
 from lidar.controller import BotController
 
 
-SCANS_THRESHOLD = 10
 MAP_SIZE_PIXELS = 4000
 MAP_SIZE_METERS = 20
 SCREEN_SIZE_PIXELS = 900
@@ -32,7 +30,7 @@ class ScanseLidar(Laser):
     ENGINE_ROTATION_HZ = 6
     SAMPLING_RATE_HZ = 1000
     SAMPLES_COUNT = int(1*SAMPLING_RATE_HZ/ENGINE_ROTATION_HZ)
-    HOLE_WIDTH = 40
+    HOLE_WIDTH = 500
 
     def __init__(self):
         # A 360 degree lidar scanning points between NO_DETECTION_THESHOLD and RANGE mm
@@ -43,11 +41,10 @@ class A2Lidar(Laser):
     ENGINE_ROTATION_HZ = 10
     SAMPLING_RATE_HZ = 4000
     SAMPLES_COUNT = int(SAMPLING_RATE_HZ/ENGINE_ROTATION_HZ)
-    HOLE_WIDTH = 25
-    DISTANCE_THRESHOLD = 10 # Distance cutoff value, mm
+    HOLE_WIDTH = 200
     
     def __init__(self):
-        Laser.__init__(self, self.SAMPLES_COUNT, self.ENGINE_ROTATION_HZ, 360, A2Lidar.DISTANCE_THRESHOLD, offset_mm=-25)
+        Laser.__init__(self, self.SAMPLES_COUNT, self.ENGINE_ROTATION_HZ, 360, A2Lidar.HOLE_WIDTH, offset_mm=-25)
         
 
 def read_scans(data_source):
