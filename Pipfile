@@ -1,0 +1,32 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+
+pyzmq = "*"
+PyYAML = "*"
+requests = "*"
+pygame = "*"
+numpy = "*"
+scipy = "*"
+pillow = "*"
+opencv-python = "*"
+
+
+[dev-packages]
+jedi = "*"
+rope = "*"
+importmagic = "*"
+autopep8 = "*"
+yapf = "*"
+flake8 = "*"
+virtualenvwrapper = "*"
+ipython = "*"
+
+[requires]
+
+python_version = "3.6"
