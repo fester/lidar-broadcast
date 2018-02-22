@@ -13,6 +13,8 @@ TRAVERSABLE_CELL = 0
 BLOCKED_CELL = 1
 PARTIALLY_BLOCKED_CELL = 2
 UNEXPLORED_CELL = 3
+MAP_SIZE_METERS = 20
+
 
 def natsort_key(text):
     return [ int(c) if c.isdigit() else c
@@ -57,12 +59,24 @@ class OccupancyGrid:
         return self._density
 
     def _grid_cell_state(self, cell):
-        values, counts = np.unique(cell, return_counts=True)
+        m = np.median(cell)
+        # d = np.stdev(cell)
+        
+        epsilon = 20
 
-        if len(values) >= 1 and values[0] > 180:
+        if abs(127-m) < epsilon:
+            return UNEXPLORED_CELL
+        elif abs(255-m) < epsilon:
             return TRAVERSABLE_CELL
         else:
             return BLOCKED_CELL
+
+        # values, counts = np.unique(cell, return_counts=True)
+
+        # if len(values) >= 1 and values[0] > 180:
+        #     return TRAVERSABLE_CELL
+        # else:
+        #     return BLOCKED_CELL
 
     def __init_grid(self):
         self._grid_size = int(self._map_size/self._density+0.5)
@@ -148,6 +162,11 @@ class OccupancyGrid:
         pa = np.array(p)
         return tuple(pa*self.density+self.density/2)
 
+    def to_meter_coords(self, p):
+        px, py = self.to_map_coords(p)
+        k = self._map_size/MAP_SIZE_METERS
+        return px*k, py*k
+    
     
 class GridView:
     def __init__(self, grid, screen, traversable_color, blocked_color):
@@ -272,16 +291,16 @@ def main():
     current_map = maps[-7]
 
     # grid = OccupancyGrid(current_map, 1, 8)
-    GRID_DENSITY = 16
+    GRID_DENSITY = 32
     grid = OccupancyGrid(current_map, 1, GRID_DENSITY)
     grid_view = GridView(grid, app.screen, (0, 50, 10), (50, 0, 0))
     map_view = MapView(current_map, app.screen)
 
-    path = grid.get_path((93, 93), (76,60))
-    map_space_path = map(lambda c: grid.to_map_coords(c), path)
-    print(list(map_space_path))
-    
+    # path = grid.get_path((100, 40), (55,139))
+    # map_space_path = map(lambda c: grid.to_map_coords(c), path)
+    # print(list(map_space_path))
     #print(grid.size)
+
     while not app.is_over:
         with frame(app):
             app.process_events()
