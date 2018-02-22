@@ -2,3 +2,7 @@ config.yaml
 sweep-sdk
 **/__pycache__
 *.pyc
+map_updates/*
+**/.DS_Store
+.ipynb_checkpoints
+
